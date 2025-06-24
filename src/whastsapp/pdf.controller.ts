@@ -1,41 +1,21 @@
+// pdf.controller.ts
 import {
   Controller,
-  Get,
   Post,
-  Body,
-  UseInterceptors,
   UploadedFile,
+  UseInterceptors,
   Req,
 } from '@nestjs/common';
-import { AseosService } from './aseos.service';
-import { CreateAseoDto } from './dto/create-aseo.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import * as path from 'path';
 import { v4 as uuid } from 'uuid';
-import { WhatsappService } from 'src/whastsapp/whatsapp.service';
+import * as path from 'path';
 import { Request } from 'express';
+import { WhatsappService } from './whatsapp.service';
 
-@Controller('aseos')
-export class AseosController {
-  constructor(
-    private readonly aseosService: AseosService,
-    private readonly whatsappService: WhatsappService,
-  ) {}
-
-  @Post()
-  create(@Body() createAseoDto: CreateAseoDto) {
-    return this.aseosService.create(createAseoDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.aseosService.getAsignacionesAgrupadasPorMes();
-  }
-  @Get('agrupado-por-mes')
-  async getAgrupadoPorMes() {
-    return this.aseosService.getAsignacionesAgrupadasPorMes();
-  }
+@Controller('pdf')
+export class PdfController {
+  constructor(private readonly whatsappService: WhatsappService) {}
 
   @Post('enviar')
   @UseInterceptors(
@@ -43,7 +23,8 @@ export class AseosController {
       storage: diskStorage({
         destination: './uploads/pdf',
         filename: (req, file, cb) => {
-          cb(null, file.originalname);
+          const nombre = `${uuid()}${path.extname(file.originalname)}`;
+          cb(null, nombre);
         },
       }),
     }),

@@ -10,6 +10,8 @@ import { Between, Repository } from 'typeorm';
 import { Miembro } from 'src/miembros/entities/miembro.entity';
 import * as dayjs from 'dayjs'; // ✅ Así funciona siempre con TypeScript y CommonJS
 import { InjectRepository } from '@nestjs/typeorm';
+import { WhatsappService } from 'src/whastsapp/whatsapp.service';
+
 
 @Injectable()
 export class AseosService {
@@ -18,6 +20,7 @@ export class AseosService {
     private readonly aseoRepository: Repository<Aseo>,
     @InjectRepository(Miembro)
     private readonly miembroRepository: Repository<Miembro>,
+    private readonly whatsappService: WhatsappService,
   ) {}
   async create(createAseoDto: CreateAseoDto) {
     const miembro = await this.miembroRepository.findOne({
@@ -59,9 +62,37 @@ export class AseosService {
     return !!existe;
   }
 
-  findAll() {
-    return `This action returns all aseos`;
+  async getAsignacionesAgrupadasPorMes(): Promise<Record<string, any[]>> {
+    const asignaciones = await this.aseoRepository.find({
+      relations: ['miembro'],
+      order: { fecha: 'ASC' },
+    });
+
+    const agrupado: Record<string, any[]> = {};
+
+    for (const aseo of asignaciones) {
+      const mes = dayjs(aseo.fecha).format('YYYY-MM');
+
+      if (!agrupado[mes]) {
+        agrupado[mes] = [];
+      }
+
+      agrupado[mes].push({
+        fecha: dayjs(aseo.fecha).format('YYYY-MM-DD'),
+        miembro: {
+          id: aseo.miembro.id,
+          name: aseo.miembro.name,
+          apellido: aseo.miembro.apellido,
+          // agrega otros campos si los necesitas
+        },
+      });
+    }
+
+    return agrupado;
   }
+
+
+
 
   findOne(id: number) {
     return `This action returns a #${id} aseo`;

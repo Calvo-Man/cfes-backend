@@ -1,11 +1,11 @@
 // aseo-cron.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Aseo } from 'src/aseos/entities/aseo.entity';
 import { AseosService } from 'src/aseos/aseos.service';
 import { MiembrosService } from 'src/miembros/miembros.service';
 import * as dayjs from 'dayjs';
 import { Miembro } from 'src/miembros/entities/miembro.entity';
+import { AseoGateway } from './aseo.gateway';
 
 @Injectable()
 export class AseoCronService {
@@ -14,8 +14,10 @@ export class AseoCronService {
   constructor(
     private readonly miembroService: MiembrosService,
     private readonly aseoService: AseosService,
+    private readonly aseoGateway: AseoGateway,
+
   ) {}
-  // @Cron('0 0 25 * *')
+  //@Cron('0 0 25 * *')
   @Cron('* * * * *') // ✅ Ejecuta cada minuto
   async generarHorarioMensualDeAseo() {
     this.logger.log(
@@ -87,7 +89,7 @@ export class AseoCronService {
     this.logger.log(
       `✅ Se generaron ${miembrosAsignados} asignaciones de aseo para el próximo mes.`,
     );
-
+    this.aseoGateway.notificarNuevoHorario();
   }
 
   obtenerDiasJuevesYDomingoDelProximoMes(): Date[] {

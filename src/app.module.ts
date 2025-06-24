@@ -8,6 +8,11 @@ import { RolesModule } from './roles/roles.module';
 import { AseosModule } from './aseos/aseos.module';
 import { RoleSeedModule } from './roles/roles-seed.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AsistenciasModule } from './asistencias/asistencias.module';
+import { CasasDeFeModule } from './casas-de-fe/casas-de-fe.module';
+import { EventosModule } from './eventos/eventos.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -15,6 +20,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+      ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads', // Esto hace que la URL sea: http://localhost:3000/uploads
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -38,7 +47,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     MiembrosModule,
     RolesModule,
     AseosModule,
-    RoleSeedModule
+    RoleSeedModule,
+    AsistenciasModule,
+    CasasDeFeModule,
+    EventosModule
     
   ],
   controllers: [AppController],

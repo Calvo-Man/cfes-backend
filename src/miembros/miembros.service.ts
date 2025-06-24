@@ -27,6 +27,7 @@ export class MiembrosService {
     password: createMiembroDto.password,
     telefono: createMiembroDto.telefono,
     rol: createMiembroDto.rol,
+    
   });
     return await this.miembroRepository.save(nuevoMiembro);
   }
