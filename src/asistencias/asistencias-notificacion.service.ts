@@ -10,6 +10,7 @@ import { OpenRouteService } from 'src/geolocalizacion/openroute.service';
 import { WhatsappService } from 'src/whastsapp/whatsapp.service';
 import { Cron } from '@nestjs/schedule';
 import { AsistenciasService } from './asistencias.service';
+import { GeocodingService } from 'src/geolocalizacion/geocoding.service';
 
 @Injectable()
 export class AsistenciasNotificacionService {
@@ -24,12 +25,13 @@ export class AsistenciasNotificacionService {
     private readonly nominatimService: NominatimService,
     private readonly openRouteService: OpenRouteService,
     private readonly whatsappService: WhatsappService,
+    private readonly geocodingService: GeocodingService
   ) {}
   private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
- // @Cron('* * * * *')
+ @Cron('* * * * *')
   async notificarEncargadosConUsuariosCercanos() {
     this.logger.debug('Notificando encargados con usuarios cercanos');
     const usuarios = await this.usuarioRepository.find({
@@ -47,11 +49,11 @@ export class AsistenciasNotificacionService {
     this.logger.debug('Procesando usuarios...');
     for (const usuario of usuarios) {
       try {
-        await this.sleep(2000);
+        await this.sleep(1000);
         this.logger.debug(`Procesando ${usuario.nombre}`);
         await this.asistenciasService.MensajeEnviado(usuario.id);
         this.logger.debug('Mensaje enviado', usuario.mensaje_enviado);
-        const coords = await this.nominatimService.obtenerCoordenadas(
+        const coords = await this.geocodingService.obtenerCoordenadas(
           usuario.direccion,
         );
         this.logger.debug('Coordenadas obtenidas', coords);
@@ -60,7 +62,7 @@ export class AsistenciasNotificacionService {
 
         for (const casa of casas) {
           const distancia = await this.openRouteService.calcularRuta(
-            [coords.lon, coords.lat],
+            [coords.longitud, coords.latitud],
             [casa.longitud, casa.latitud],
           );
 

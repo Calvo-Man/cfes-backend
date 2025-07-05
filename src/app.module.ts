@@ -13,6 +13,7 @@ import { CasasDeFeModule } from './casas-de-fe/casas-de-fe.module';
 import { EventosModule } from './eventos/eventos.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -50,7 +51,8 @@ import { join } from 'path';
     RoleSeedModule,
     AsistenciasModule,
     CasasDeFeModule,
-    EventosModule
+    EventosModule,
+    AuthModule
     
   ],
   controllers: [AppController],

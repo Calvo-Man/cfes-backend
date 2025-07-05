@@ -14,7 +14,7 @@ export class MiembrosController {
 
   @Get()
   findAll() {
-    return this.miembrosService.findAll();
+    return this.miembrosService.getMiembros();
   }
 
   @Get(':id')

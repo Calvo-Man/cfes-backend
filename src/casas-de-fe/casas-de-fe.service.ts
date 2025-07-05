@@ -157,4 +157,42 @@ export class CasasDeFeService {
 
     return puntoCercano;
   }
+  async findAll() {
+    return await this.casasDeFeRepository.find({ relations: ['encargadosId'] });
+  }
+  async findOne(id: number) {
+    const punto = await this.casasDeFeRepository.findOne({ where: { id }, relations: ['encargadosId'] });
+
+    if (!punto) {
+      throw new NotFoundException('Casa de fe no encontrada');
+    }
+    return punto;
+  }
+  async update(id: number, updateCasasDeFeDto: UpdateCasasDeFeDto) {
+    const punto = await this.casasDeFeRepository.findOne({ where: { id } });
+    if (!punto) {
+      throw new NotFoundException('Casa de fe no encontrada');
+    }
+    const encargados = await this.miembroRepository.findBy({
+      id: In(updateCasasDeFeDto.encargadosId),
+    });
+    if (!encargados) {
+      throw new NotFoundException('Encargados no encontrados');
+    }
+
+    return await this.casasDeFeRepository.update(id, {
+      ...updateCasasDeFeDto,
+      encargadosId: encargados,
+    });
+  }
+
+  async remove(id: number) {
+    const punto = await this.casasDeFeRepository.findOne({ where: { id } });
+    if (!punto) {
+      throw new NotFoundException('Casa de fe no encontrada');
+    }
+    await this.casasDeFeRepository.remove(punto);
+    return { message: 'Casa de fe eliminada con exito', status: 200 };
+  }
 }
+

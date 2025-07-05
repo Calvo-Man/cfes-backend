@@ -1,7 +1,7 @@
 // asistencias.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import * as moment from 'moment-timezone';
@@ -27,11 +27,41 @@ export class AsistenciasService {
   async MensajeEnviado(id: number) {
     const asistencia = await this.asistenciaRepository.findOne({ where: { id } });
     if (!asistencia) {
-      throw new Error('Asistencia no encontrada');
+      throw new NotFoundException('Asistencia no encontrada');
     }
     asistencia.mensaje_enviado = true;
     return await this.asistenciaRepository.save(asistencia);
   }
 
-  // Los demás métodos pueden quedarse igual por ahora
+ async findAll() {
+    const asistencias = await this.asistenciaRepository.find();
+    if (!asistencias) {
+      throw new NotFoundException('Asistencias no encontradas');
+    }
+    return asistencias;
+  }
+
+  async findOneById(id: number) {
+    const asistencia = await this.asistenciaRepository.findOne({ where: { id } });
+    if (!asistencia) {
+      throw new NotFoundException('Asistencia no encontrada');
+    }
+    return asistencia;
+  }
+
+  async update(id: number, updateAsistenciaDto: CreateAsistenciaDto) {
+    const asistencia = await this.asistenciaRepository.findOne({ where: { id } });
+    if (!asistencia) {
+      throw new NotFoundException('Asistencia no encontrada');
+    }
+    return await this.asistenciaRepository.update(id, updateAsistenciaDto);
+  }
+
+  async remove(id: number) {
+    const asistencia = await this.asistenciaRepository.delete(id);
+    if (!asistencia) {
+      throw new NotFoundException('Asistencia no encontrada');
+    }
+    return asistencia;
+  }
 }

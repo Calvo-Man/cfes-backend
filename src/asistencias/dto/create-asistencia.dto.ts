@@ -1,7 +1,19 @@
+import { IsNotEmpty, IsString } from 'class-validator';
+
 export class CreateAsistenciaDto {
-    nombre: string;
-    apellido: string;
-    telefono: string;
-    dirreccion: string;
-    barrio: string;
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
+  @IsString()
+  @IsNotEmpty()
+  apellido: string;
+  @IsString()
+  @IsNotEmpty()
+  telefono: string;
+  @IsString()
+  @IsNotEmpty()
+  direccion: string;
+  @IsString()
+  @IsNotEmpty()
+  barrio: string;
 }

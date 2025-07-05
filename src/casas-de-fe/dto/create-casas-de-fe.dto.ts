@@ -1,9 +1,16 @@
+import { IsArray, IsNumber, IsString } from 'class-validator';
+
 export class CreateCasasDeFeDto {
-    nombre: string;
+  @IsString()
+  nombre: string;
 
-    latitud: number;
+  @IsNumber()
+  latitud: number;
 
-    longitud: number;
+  @IsNumber()
+  longitud: number;
 
-    encargadosId: number[];
+  @IsArray()
+  @IsNumber({}, { each: true })
+  encargadosId: number[];
 }

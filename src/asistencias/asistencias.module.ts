@@ -9,12 +9,13 @@ import { NominatimService } from 'src/geolocalizacion/nominatim.service';
 import { OpenRouteService } from 'src/geolocalizacion/openroute.service';
 import { OpenCageService } from 'src/geolocalizacion/opencage.service';
 import { WhatsappService } from 'src/whastsapp/whatsapp.service';
+import { GeocodingService } from 'src/geolocalizacion/geocoding.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Asistencia, CasasDeFe]),
   ],
   controllers: [AsistenciasController],
-  providers: [AsistenciasService, AsistenciasNotificacionService,NominatimService,OpenRouteService,WhatsappService],
+  providers: [AsistenciasService,GeocodingService, AsistenciasNotificacionService,NominatimService,OpenRouteService,WhatsappService],
 })
 export class AsistenciasModule {}

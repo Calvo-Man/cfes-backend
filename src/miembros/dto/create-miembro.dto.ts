@@ -2,8 +2,6 @@ import { IsEnum, IsNumber, IsString } from 'class-validator';
 import { Rol } from 'src/roles/enum/roles.enum';
 
 export class CreateMiembroDto {
-  
-
   @IsString()
   name: string;
 

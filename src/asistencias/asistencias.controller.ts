@@ -19,4 +19,24 @@ export class AsistenciasController {
   create(@Body() createAsistenciaDto: CreateAsistenciaDto) {
     return this.asistenciasService.create(createAsistenciaDto);
   }
+
+  @Get()
+  findAll() {
+    return this.asistenciasService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.asistenciasService.findOneById(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateAsistenciaDto: UpdateAsistenciaDto) {
+    return this.asistenciasService.update(+id, updateAsistenciaDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.asistenciasService.remove(+id);
+  }
 }

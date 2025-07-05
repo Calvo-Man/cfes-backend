@@ -5,10 +5,10 @@ import {
   Column,
   Entity,
   ManyToMany,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Horario } from '../enum/horario.enum';
 
 @Entity()
 export class Miembro {
@@ -27,10 +27,16 @@ export class Miembro {
   @Column({ length: 80 })
   password: string;
 
-  @Column({ length: 80, unique: true })
+  @Column({ length: 12,})
   telefono: string;
 
-   @Column({
+  @Column({ type: 'boolean', default: true })
+  disponibilidad_aseo: boolean;
+
+  @Column({ type: 'enum', enum: Horario, default: Horario.ANY })
+  horario_aseo: Horario;
+
+  @Column({
     type: 'enum',
     enum: Rol,
     default: Rol.SERVIDOR, // opcional

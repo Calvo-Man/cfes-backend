@@ -18,13 +18,13 @@ export class AseoCronService {
 
   ) {}
   //@Cron('0 0 25 * *')
-  @Cron('* * * * *') // ✅ Ejecuta cada minuto
+  //@Cron('* * * * *') // ✅ Ejecuta cada minuto
   async generarHorarioMensualDeAseo() {
     this.logger.log(
       '🧹 Generando horario de aseo mensual aleatorio con al menos un miembro por día...',
     );
     let miembrosAsignados = 0;
-    const miembros = await this.miembroService.findAll();
+    const miembros = await this.miembroService.findAllMembers();
     const fechas = this.obtenerDiasJuevesYDomingoDelProximoMes();
 
     if (miembros.length < fechas.length) {

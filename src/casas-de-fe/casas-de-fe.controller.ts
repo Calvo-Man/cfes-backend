@@ -36,4 +36,23 @@ export class CasasDeFeController {
   async buscarCasaCercano(@Query('barrio') barrio: string) {
     return this.casasDeFeService.puntoMasCercanoDesde(barrio);
   }
+  @Get()
+  findAll() {
+    return this.casasDeFeService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.casasDeFeService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateCasasDeFeDto: UpdateCasasDeFeDto) {
+    return this.casasDeFeService.update(+id, updateCasasDeFeDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.casasDeFeService.remove(+id);
+  }
 }
