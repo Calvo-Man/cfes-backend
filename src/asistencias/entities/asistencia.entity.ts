@@ -1,7 +1,9 @@
+import { CasasDeFe } from 'src/casas-de-fe/entities/casas-de-fe.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -30,4 +32,7 @@ export class Asistencia {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha: Date;
+
+  @ManyToOne(() => CasasDeFe, (casasDeFe) => casasDeFe.asistencias)
+  casasDeFe: CasasDeFe;
 }

@@ -158,7 +158,7 @@ export class CasasDeFeService {
     return puntoCercano;
   }
   async findAll() {
-    return await this.casasDeFeRepository.find({ relations: ['encargadosId'] });
+    return await this.casasDeFeRepository.find({ relations: ['encargadosId','asistencias','miembros'], order: { id: 'DESC' } });
   }
   async findOne(id: number) {
     const punto = await this.casasDeFeRepository.findOne({ where: { id }, relations: ['encargadosId'] });
@@ -167,6 +167,10 @@ export class CasasDeFeService {
       throw new NotFoundException('Casa de fe no encontrada');
     }
     return punto;
+  }
+
+  async countCasasDeFe() {
+    return await this.casasDeFeRepository.count();
   }
   async update(id: number, updateCasasDeFeDto: UpdateCasasDeFeDto) {
     const punto = await this.casasDeFeRepository.findOne({ where: { id } });

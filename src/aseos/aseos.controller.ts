@@ -6,6 +6,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AseosService } from './aseos.service';
 import { CreateAseoDto } from './dto/create-aseo.dto';
@@ -15,12 +16,16 @@ import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { WhatsappService } from 'src/whastsapp/whatsapp.service';
 import { Request } from 'express';
+import { AseoCronService } from './aseo-cron.service';
+import { RolesGuard } from 'src/roles/role-guard/role.guard';
+@UseGuards(RolesGuard)
 
 @Controller('aseos')
 export class AseosController {
   constructor(
     private readonly aseosService: AseosService,
     private readonly whatsappService: WhatsappService,
+    private readonly aseoCronService: AseoCronService,
   ) {}
 
   @Post()
@@ -35,6 +40,10 @@ export class AseosController {
   @Get('agrupado-por-mes')
   async getAgrupadoPorMes() {
     return this.aseosService.getAsignacionesAgrupadasPorMes();
+  }
+  @Post('generar')
+  async generarHorarioMensualDeAseo() {
+    return this.aseoCronService.generarHorarioMensualDeAseo();
   }
 
   @Post('enviar')

@@ -25,23 +25,23 @@ export class AsistenciasNotificacionService {
     private readonly nominatimService: NominatimService,
     private readonly openRouteService: OpenRouteService,
     private readonly whatsappService: WhatsappService,
-    private readonly geocodingService: GeocodingService
+    private readonly geocodingService: GeocodingService,
   ) {}
   private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
- @Cron('* * * * *')
+  @Cron('* * * * *')
   async notificarEncargadosConUsuariosCercanos() {
     this.logger.debug('Notificando encargados con usuarios cercanos');
     const usuarios = await this.usuarioRepository.find({
-      where: { direccion: Not(IsNull()),mensaje_enviado: false },
+      where: { direccion: Not(IsNull()), mensaje_enviado: false },
     });
     this.logger.debug(`Encontrados ${usuarios.length} usuarios`);
     const casas = await this.casasDeFeRepository.find({
       relations: ['encargadosId'],
     });
-    if(usuarios.length === 0 || casas.length === 0) {
+    if (usuarios.length === 0 || casas.length === 0) {
       return;
     }
     this.logger.debug(`Encontradas ${casas.length} casas`);
@@ -76,6 +76,10 @@ export class AsistenciasNotificacionService {
         if (casaMasCercana) {
           mapaUsuariosPorCasa[casaMasCercana.id] ||= [];
           mapaUsuariosPorCasa[casaMasCercana.id].push(usuario);
+          await this.asistenciasService.asignarCasaDeFe(
+            usuario.id,
+            casaMasCercana,
+          );
         }
         this.logger.debug('Usuarios por casa', mapaUsuariosPorCasa);
       } catch (err) {
@@ -97,13 +101,15 @@ export class AsistenciasNotificacionService {
 ` + usuariosCercanos.map((u) => `• ${u.nombre} (${u.telefono})`).join('\n');
 
       for (const encargado of casa.encargadosId) {
-       const respuesta = await this.whatsappService.enviarMensaje(encargado.telefono, mensaje);
+        const respuesta = await this.whatsappService.enviarMensaje(
+          encargado.telefono,
+          mensaje,
+        );
 
         this.logger.debug(
           `Mensaje enviado a ${encargado.name} (${encargado.telefono}): ${respuesta}`,
         );
       }
-
     }
   }
 }

@@ -1,34 +1,47 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { EventosService } from './eventos.service';
-import { CreateEventoDto } from './dto/create-evento.dto';
-import { UpdateEventoDto } from './dto/update-evento.dto';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from "@nestjs/common";
+import { UpdateEventoDto } from "./dto/update-evento.dto";
+import { Roles } from "src/roles/decorator/roles.decorator";
+import { Rol } from "src/roles/enum/roles.enum";
+import { EventosService } from "./eventos.service";
+import { CreateEventoDto } from "./dto/create-evento.dto";
+import { RolesGuard } from "src/roles/role-guard/role.guard";
 
 @Controller('eventos')
+@UseGuards(RolesGuard) // <-- Descomenta si quieres proteger todos los métodos
 export class EventosController {
   constructor(private readonly eventosService: EventosService) {}
 
   @Post()
-  async create(@Body() createEventoDto: CreateEventoDto) {
+  @Roles(Rol.PASTOR)
+  create(@Body() createEventoDto: CreateEventoDto) {
     return this.eventosService.create(createEventoDto);
   }
 
   @Get()
-  async findAll() {
+  findAll() {
     return this.eventosService.findAllAgrupadoPorMes();
   }
 
+  @Get('count')
+  countEventos() {
+    return this.eventosService.countEventosThisMonth();
+  }
+
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.eventosService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.eventosService.findOne(id);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateEventoDto: UpdateEventoDto) {
-    return this.eventosService.update(+id, updateEventoDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateEventoDto: UpdateEventoDto,
+  ) {
+    return this.eventosService.update(id, updateEventoDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.eventosService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.eventosService.remove(id);
   }
 }

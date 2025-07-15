@@ -14,6 +14,7 @@ import { EventosModule } from './eventos/eventos.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
+import { MiembroCasaDeFeModule } from './miembro-casa-de-fe/miembro-casa-de-fe.module';
 
 @Module({
   imports: [
@@ -52,7 +53,8 @@ import { AuthModule } from './auth/auth.module';
     AsistenciasModule,
     CasasDeFeModule,
     EventosModule,
-    AuthModule
+    AuthModule,
+    MiembroCasaDeFeModule
     
   ],
   controllers: [AppController],

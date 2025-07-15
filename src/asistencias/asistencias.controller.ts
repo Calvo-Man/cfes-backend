@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { AsistenciasService } from './asistencias.service';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
 import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
-
+import { RolesGuard } from 'src/roles/role-guard/role.guard';
+@UseGuards(RolesGuard)
 @Controller('asistencias')
 export class AsistenciasController {
   constructor(private readonly asistenciasService: AsistenciasService) {}
@@ -25,13 +27,20 @@ export class AsistenciasController {
     return this.asistenciasService.findAll();
   }
 
+  @Get('count')
+  count() {
+    return this.asistenciasService.countAsistenciasThisMonth();
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.asistenciasService.findOneById(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAsistenciaDto: UpdateAsistenciaDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateAsistenciaDto: UpdateAsistenciaDto,
+  ) {
     return this.asistenciasService.update(+id, updateAsistenciaDto);
   }
 

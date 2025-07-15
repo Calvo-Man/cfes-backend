@@ -10,6 +10,9 @@ export class CreateCasasDeFeDto {
   @IsNumber()
   longitud: number;
 
+  @IsString()
+  direccion: string;
+
   @IsArray()
   @IsNumber({}, { each: true })
   encargadosId: number[];

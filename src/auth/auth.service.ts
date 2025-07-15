@@ -13,11 +13,11 @@ export class AuthService {
    ) {}
    async login(auth: AuthDto) {
     const user = await this.validateUser(auth);
-    const payload = { user: user.user, sub: user.id, rol: user.rol };
+    //const payload = { user: user.user, sub: user.id, rol: user.rol };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(user),
+      user
     };
-
   }
   async validateUser(auth:AuthDto): Promise<any> {
     const user = await this.miembroService.findOneByUser(auth.user);

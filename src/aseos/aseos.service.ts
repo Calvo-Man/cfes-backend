@@ -44,23 +44,15 @@ export class AseosService {
     return await this.aseoRepository.save(aseo);
   }
 
-  async existeAsignacionEnMes(
-    miembroId: number,
-    fecha: Date,
-  ): Promise<boolean> {
-    const inicioMes = dayjs(fecha).startOf('month').toDate();
-    const finMes = dayjs(fecha).endOf('month').toDate();
+async existeAsignacionEnFecha(miembroId: number, fecha: Date) {
+  return this.aseoRepository.findOne({
+    where: {
+      miembro: { id: miembroId },
+      fecha: fecha, // fecha exacta
+    },
+  });
+}
 
-    const existe = await this.aseoRepository.findOne({
-      where: {
-        miembro: { id: miembroId },
-        fecha: Between(inicioMes, finMes),
-      },
-      relations: ['miembro'],
-    });
-
-    return !!existe;
-  }
 
   async getAsignacionesAgrupadasPorMes(): Promise<Record<string, any[]>> {
     const asignaciones = await this.aseoRepository.find({

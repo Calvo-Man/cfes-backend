@@ -1,11 +1,11 @@
-// aseo-cron.service.ts
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { AseosService } from 'src/aseos/aseos.service';
 import { MiembrosService } from 'src/miembros/miembros.service';
 import * as dayjs from 'dayjs';
 import { Miembro } from 'src/miembros/entities/miembro.entity';
 import { AseoGateway } from './aseo.gateway';
+import { Horario } from 'src/miembros/enum/horario.enum';
 
 @Injectable()
 export class AseoCronService {
@@ -15,68 +15,110 @@ export class AseoCronService {
     private readonly miembroService: MiembrosService,
     private readonly aseoService: AseosService,
     private readonly aseoGateway: AseoGateway,
-
   ) {}
-  //@Cron('0 0 25 * *')
-  //@Cron('* * * * *') // ✅ Ejecuta cada minuto
+
+  //@Cron('0 0 0 1 * *')
   async generarHorarioMensualDeAseo() {
-    this.logger.log(
-      '🧹 Generando horario de aseo mensual aleatorio con al menos un miembro por día...',
-    );
-    let miembrosAsignados = 0;
+    this.logger.log('🧹 Generando horario de aseo mensual...');
+
     const miembros = await this.miembroService.findAllMembers();
     const fechas = this.obtenerDiasJuevesYDomingoDelProximoMes();
+    const domingos = fechas.filter((f) => dayjs(f).day() === 0);
+    const jueves = fechas.filter((f) => dayjs(f).day() === 4);
 
-    if (miembros.length < fechas.length) {
-      this.logger.warn(
-        `🚫 No hay suficientes miembros para cubrir todos los días (${miembros.length}/${fechas.length})`,
-      );
-      return;
-    }
-
-    const miembrosAleatorios = this.mezclarArray(miembros);
-    const usadosEsteMes = new Set<number>();
+    const miembrosUsados = new Set<number>();
     const asignaciones: { miembro: Miembro; fecha: Date }[] = [];
+    const asignacionesPorFecha: Record<string, Miembro[]> = {};
+    const asignacionesPorMiembro: Record<number, number> = {};
+    const resumenDiasIncompletos: string[] = [];
 
-    // Paso 1: asignar al menos 1 por día
-    for (let i = 0; i < fechas.length; i++) {
-      const miembro = miembrosAleatorios[i];
-      const fecha = fechas[i];
-
+    const asignar = (miembro: Miembro, fecha: Date) => {
+      const key = fecha.toISOString();
+      if (!asignacionesPorFecha[key]) asignacionesPorFecha[key] = [];
       asignaciones.push({ miembro, fecha });
-      usadosEsteMes.add(miembro.id);
+      asignacionesPorFecha[key].push(miembro);
+      miembrosUsados.add(miembro.id);
+      asignacionesPorMiembro[miembro.id] = (asignacionesPorMiembro[miembro.id] || 0) + 1;
+    };
+
+    const todosLosDias = [...domingos, ...jueves];
+
+    // Paso 1: Asignar 1 por día según disponibilidad
+    for (const fecha of todosLosDias) {
+      const dia = dayjs(fecha).day();
+      const compatibles = this.mezclarArray(
+        miembros.filter((m) => {
+          const asignacionesTotales = asignacionesPorMiembro[m.id] || 0;
+          if (asignacionesTotales >= 2) return false;
+          if (
+            dia === 0 &&
+            (m.horario_aseo === Horario.DOMINGO || m.horario_aseo === Horario.ANY)
+          ) return true;
+          if (
+            dia === 4 &&
+            (m.horario_aseo === Horario.JUEVES || m.horario_aseo === Horario.ANY)
+          ) return true;
+          return false;
+        })
+      );
+
+      if (compatibles.length > 0) asignar(compatibles[0], fecha);
     }
 
-    // Paso 2: asignar más miembros aleatoriamente si sobran
-    const miembrosRestantes = miembrosAleatorios.filter(
-      (m) => !usadosEsteMes.has(m.id),
-    );
-    const fechasAleatorias = this.mezclarArray(fechas);
+    // Paso 2: Completar los días con el mínimo requerido
+    for (const fecha of todosLosDias) {
+      const key = fecha.toISOString();
+      const dia = dayjs(fecha).day();
+      const minimo = dia === 0 ? 3 : 2;
+      const asignados = asignacionesPorFecha[key]?.length || 0;
+      if (asignados >= minimo) continue;
 
-    let fechaExtraIndex = 0;
-    for (const miembro of miembrosRestantes) {
-      const fecha = fechasAleatorias[fechaExtraIndex % fechasAleatorias.length];
-      asignaciones.push({ miembro, fecha });
-      usadosEsteMes.add(miembro.id);
-      fechaExtraIndex++;
+      let faltan = minimo - asignados;
+
+      const compatibles = this.mezclarArray(
+        miembros.filter((m) => {
+          const asignacionesTotales = asignacionesPorMiembro[m.id] || 0;
+          if (asignacionesTotales >= 2) return false;
+          if (
+            dia === 0 &&
+            (m.horario_aseo === Horario.DOMINGO || m.horario_aseo === Horario.ANY)
+          ) return true;
+          if (
+            dia === 4 &&
+            (m.horario_aseo === Horario.JUEVES || m.horario_aseo === Horario.ANY)
+          ) return true;
+          return false;
+        })
+      );
+
+      for (const miembro of compatibles) {
+        if (faltan <= 0) break;
+        asignar(miembro, fecha);
+        faltan--;
+      }
+
+      const finalCount = asignacionesPorFecha[key]?.length || 0;
+      if (finalCount < minimo) {
+        resumenDiasIncompletos.push(
+          `❌ El ${dayjs(fecha).format('dddd DD/MM/YYYY')} no pudo ser completado. Solo ${finalCount}/${minimo} asignados.`,
+        );
+      }
     }
 
-    // Paso 3: guardar en la base de datos si no existen duplicados
-    for (const asignacion of asignaciones) {
-      const { miembro, fecha } = asignacion;
-
-      const yaExiste = await this.aseoService.existeAsignacionEnMes(
+    // Paso 3: Guardar asignaciones
+    let miembrosAsignados = 0;
+    for (const { miembro, fecha } of asignaciones) {
+      const yaExiste = await this.aseoService.existeAsignacionEnFecha(
         miembro.id,
         fecha,
       );
-
       if (yaExiste) {
         this.logger.warn(
-          `🚫 Ya existe una asignación de aseo para ${miembro.name} ${miembro.apellido} el ${dayjs(fecha).format('DD/MM/YYYY')}.`,
+          `🚫 Ya existe asignación para ${miembro.name} ${miembro.apellido} el ${dayjs(fecha).format('DD/MM/YYYY')}`,
         );
         continue;
       }
-      miembrosAsignados++;
+
       await this.aseoService.create({
         miembroId: miembro.id,
         fecha: fecha.toISOString(),
@@ -85,10 +127,16 @@ export class AseoCronService {
       this.logger.log(
         `✅ Asignado ${miembro.name} para el ${dayjs(fecha).format('DD/MM/YYYY')}`,
       );
+      miembrosAsignados++;
     }
-    this.logger.log(
-      `✅ Se generaron ${miembrosAsignados} asignaciones de aseo para el próximo mes.`,
-    );
+
+    this.logger.log(`✅ Se generaron ${miembrosAsignados} asignaciones de aseo.`);
+
+    if (resumenDiasIncompletos.length > 0) {
+      this.logger.warn('⚠️ Días con asignaciones incompletas:');
+      resumenDiasIncompletos.forEach((msg) => this.logger.warn(msg));
+    }
+
     this.aseoGateway.notificarNuevoHorario();
   }
 
@@ -106,6 +154,7 @@ export class AseoCronService {
 
     return fechas;
   }
+
   mezclarArray<T>(array: T[]): T[] {
     const copia = [...array];
     for (let i = copia.length - 1; i > 0; i--) {

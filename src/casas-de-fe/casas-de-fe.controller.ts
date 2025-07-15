@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CasasDeFeService } from './casas-de-fe.service';
 import { CreateCasasDeFeDto } from './dto/create-casas-de-fe.dto';
 import { UpdateCasasDeFeDto } from './dto/update-casas-de-fe.dto';
+import { RolesGuard } from 'src/roles/role-guard/role.guard';
 
+@UseGuards(RolesGuard)
 @Controller('casas-de-fe')
 export class CasasDeFeController {
   constructor(private readonly casasDeFeService: CasasDeFeService) {}
@@ -41,13 +44,21 @@ export class CasasDeFeController {
     return this.casasDeFeService.findAll();
   }
 
+  @Get('count')
+  countCasasDeFe() {
+    return this.casasDeFeService.countCasasDeFe();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.casasDeFeService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCasasDeFeDto: UpdateCasasDeFeDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCasasDeFeDto: UpdateCasasDeFeDto,
+  ) {
     return this.casasDeFeService.update(+id, updateCasasDeFeDto);
   }
 

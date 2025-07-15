@@ -5,6 +5,8 @@ import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Miembro } from './entities/miembro.entity';
 import * as bcrypt from 'bcrypt';
+import { Rol } from 'src/roles/enum/roles.enum';
+import { Horario } from './enum/horario.enum';
 @Injectable()
 export class MiembrosService {
   constructor(
@@ -28,6 +30,7 @@ export class MiembrosService {
       password: hashedPassword,
       telefono: createMiembroDto.telefono,
       rol: createMiembroDto.rol,
+      horario_aseo: createMiembroDto.horario_aseo
     });
     const savedMiembro = await this.miembroRepository.save(nuevoMiembro);
     return{
@@ -38,6 +41,29 @@ export class MiembrosService {
       rol: savedMiembro.rol
     };
   }
+  async poblarMiembrosDePrueba(cantidad: number) {
+  const horarios = [Horario.DOMINGO, Horario.JUEVES, Horario.ANY];
+  
+  console.log(cantidad);
+  for (let i = 1; i <= cantidad; i++) {
+    await this.create({
+      name: `Miembro${i}`,
+      apellido: `Prueba`,
+      telefono: `30012345${i.toString().padStart(2, '0')}`,
+      user: `user${i.toString().padStart(2, '0')}`,
+      password: `password${i.toString().padStart(2, '0')}`,
+      rol: Rol.SERVIDOR,
+      horario_aseo: horarios[Math.floor(Math.random() * horarios.length)],
+    });
+  }
+
+  return { mensaje: `${cantidad} miembros creados con horario aleatorio.` };
+}
+
+async eliminarTodosLosMiembros() {
+  await this.miembroRepository.clear();
+  return { mensaje: '🗑️ Todos los miembros fueron eliminados correctamente.' };
+}
 
   async findAll() {
     const miembros = await this.miembroRepository.find();
@@ -98,6 +124,10 @@ export class MiembrosService {
     };
   }
 
+  async countMiembros() {
+    const count = await this.miembroRepository.count();
+    return count;
+  }
   async findOneByUser(user: string) {
     const miembro = await this.miembroRepository.findOne({ where: { user } });
     if (!miembro) {

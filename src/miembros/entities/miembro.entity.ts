@@ -21,7 +21,7 @@ export class Miembro {
   @Column({ length: 80 })
   apellido: string;
 
-  @Column({ length: 80, unique: true })
+  @Column({ length: 80, })
   user: string;
 
   @Column({ length: 80 })
