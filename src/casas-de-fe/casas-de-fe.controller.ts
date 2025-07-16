@@ -14,8 +14,8 @@ import { CreateCasasDeFeDto } from './dto/create-casas-de-fe.dto';
 import { UpdateCasasDeFeDto } from './dto/update-casas-de-fe.dto';
 import { RolesGuard } from 'src/roles/role-guard/role.guard';
 
-@UseGuards(RolesGuard)
 @Controller('casas-de-fe')
+@UseGuards(RolesGuard)
 export class CasasDeFeController {
   constructor(private readonly casasDeFeService: CasasDeFeService) {}
 

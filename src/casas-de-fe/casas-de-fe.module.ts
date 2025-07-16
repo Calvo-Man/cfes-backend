@@ -8,13 +8,14 @@ import { NominatimService } from 'src/geolocalizacion/nominatim.service';
 import { OpenRouteService } from 'src/geolocalizacion/openroute.service';
 import { OpenCageService } from 'src/geolocalizacion/opencage.service';
 import { Miembro } from 'src/miembros/entities/miembro.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([CasasDeFe, Miembro]),
   ],
   controllers: [CasasDeFeController],
-  providers: [CasasDeFeService, GeocodingService,NominatimService,OpenRouteService,OpenCageService],
+  providers: [CasasDeFeService, GeocodingService,NominatimService,OpenRouteService,OpenCageService,JwtService],
   exports: [CasasDeFeService],
 })
 export class CasasDeFeModule {}

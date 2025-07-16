@@ -68,7 +68,7 @@ export class AseosController {
     const url = `${protocolo}://${host}/uploads/pdf/${file.filename}`;
     console.log('📎 URL del PDF:', url);
     const to = '3024064896';
-    await this.whatsappService.enviarArchivoPorWhatsApp(url, to);
+    //await this.whatsappService.enviarArchivoPorWhatsApp(url, to);
     return { ok: true, enviado: file.originalname, url };
   }
 }

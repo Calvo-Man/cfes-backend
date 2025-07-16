@@ -10,12 +10,13 @@ import { OpenRouteService } from 'src/geolocalizacion/openroute.service';
 import { OpenCageService } from 'src/geolocalizacion/opencage.service';
 import { WhatsappService } from 'src/whastsapp/whatsapp.service';
 import { GeocodingService } from 'src/geolocalizacion/geocoding.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Asistencia, CasasDeFe]),
   ],
   controllers: [AsistenciasController],
-  providers: [AsistenciasService,GeocodingService, AsistenciasNotificacionService,NominatimService,OpenRouteService,WhatsappService],
+  providers: [AsistenciasService,GeocodingService, AsistenciasNotificacionService,NominatimService,OpenRouteService,WhatsappService,JwtService],
 })
 export class AsistenciasModule {}

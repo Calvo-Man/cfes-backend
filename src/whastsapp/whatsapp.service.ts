@@ -1,34 +1,86 @@
 // src/whatsapp/whatsapp.service.ts
 import { Injectable } from '@nestjs/common';
-import { Twilio } from 'twilio';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 @Injectable()
 export class WhatsappService {
-  private client: Twilio;
-  private readonly from = 'whatsapp:+14155238886'; // Número oficial de Twilio para sandbox
+  private readonly token: string;
+  private readonly phoneNumberId: string;
+  private readonly baseUrl: string;
 
-  constructor() {
-    this.client = new Twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN,
-    );
+  constructor(private configService: ConfigService) {
+    this.token = this.configService.get<string>('TOKEN_WHATSAPP')!;
+    this.phoneNumberId = this.configService.get<string>(
+      'WHATSAPP_PHONE_NUMBER_ID',
+    )!;
+    this.baseUrl = `https://graph.facebook.com/v22.0/${this.phoneNumberId}/messages`;
   }
 
-  async enviarMensaje(to: string, mensaje: string) {
-    await this.client.messages.create({
-      body: mensaje,
-      from: this.from,
-      to: `whatsapp:+57${to}`,
-    });
+  async enviarMensajeTexto(to: string, mensaje: string): Promise<any> {
+    try {
+      const payload = {
+        messaging_product: 'whatsapp',
+        to,
+        type: 'text',
+        text: {
+          body: mensaje,
+        },
+      };
+
+      const response = await axios.post(this.baseUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        '❌ Error al enviar mensaje de WhatsApp:',
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
   }
+  async enviarMensajePlantillaConVariables(
+    to: string,
+    nombrePlantilla: string,
+    variables: string[],
+    idioma = 'es_CO',
+  ) {
+    try {
+      const payload = {
+        messaging_product: 'whatsapp',
+        to,
+        type: 'template',
+        template: {
+          name: nombrePlantilla,
+          language: { code: idioma },
+          components: [
+            {
+              type: 'body',
+              parameters: variables.map((v) => ({ type: 'text', text: v })),
+            },
+          ],
+        },
+      };
 
- async enviarArchivoPorWhatsApp(mediaUrl: string, to: string ) {
-  await this.client.messages.create({
-    from: this.from,
-    to: `whatsapp:+57${to}`,
-    body: '📄 Aquí tienes el calendario de aseo en PDF',
-    mediaUrl: [mediaUrl], // Array de URLs públicas
-  });
-}
+      const response = await axios.post(this.baseUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
+      return response.data;
+    } catch (error) {
+      console.error(
+        '❌ Error al enviar plantilla:',
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  }
 }

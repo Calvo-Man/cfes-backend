@@ -27,4 +27,14 @@ export class AuthService {
     }
     throw new UnauthorizedException('Credenciales inválidas');
   }
+
+  async changePassword(auth: AuthDto) {
+    const miembro = await this.miembroService.findOneByUser(auth.user);
+    if (!miembro) {
+      throw new UnauthorizedException('Miembro no encontrado');
+    }
+    const hashedPassword = await bcrypt.hash(auth.password, 10);
+    miembro.password = hashedPassword;
+    return this.miembroService.update(miembro.id, miembro);
+  }
 }

@@ -8,14 +8,15 @@ import { Miembro } from 'src/miembros/entities/miembro.entity';
 import { MiembrosService } from 'src/miembros/miembros.service';
 import { AseoGateway } from './aseo.gateway';
 import { WhatsappService } from 'src/whastsapp/whatsapp.service';
-import { PdfController } from 'src/whastsapp/pdf.controller';
+//import { PdfController } from 'src/whastsapp/pdf.controller';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
    imports: [
     TypeOrmModule.forFeature([Aseo, Miembro]), // 👈 ¡Importante!
   ],
   controllers: [AseosController],
-  providers: [AseosService, AseoCronService,MiembrosService,AseoGateway,WhatsappService,PdfController],
+  providers: [AseosService, AseoCronService,MiembrosService,AseoGateway,WhatsappService,JwtService],
   exports: [AseosService],
 })
 export class AseosModule {}

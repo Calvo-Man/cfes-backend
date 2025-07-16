@@ -95,20 +95,36 @@ export class AsistenciasNotificacionService {
       const casa = casas.find((c) => c.id === +casaId);
       if (!casa) continue;
 
-      const mensaje =
-        `📍 Usuarios cercanos a ${casa.nombre}:
+//       const mensaje =
+//         `📍 Usuarios cercanos a ${casa.nombre}:
 
-` + usuariosCercanos.map((u) => `• ${u.nombre} (${u.telefono})`).join('\n');
+// ` + usuariosCercanos.map((u) => `• ${u.nombre} (${u.telefono})`).join('\n');
 
       for (const encargado of casa.encargadosId) {
-        const respuesta = await this.whatsappService.enviarMensaje(
-          encargado.telefono,
-          mensaje,
-        );
+        try {
+          const telefono = encargado.telefono.startsWith('57')
+            ? encargado.telefono
+            : `57${encargado.telefono}`;
 
-        this.logger.debug(
-          `Mensaje enviado a ${encargado.name} (${encargado.telefono}): ${respuesta}`,
-        );
+          const listaUsuarios = usuariosCercanos
+            .map((u) => `${u.nombre} - ${u.telefono}`)
+            .join('\n');
+
+          const respuesta =
+            await this.whatsappService.enviarMensajePlantillaConVariables(
+              telefono,
+              'asistencias_cercanas',
+              [casa.nombre, listaUsuarios],
+            );
+
+          this.logger.debug(
+            `✅ Mensaje enviado a ${encargado.name}: ${JSON.stringify(respuesta)}`,
+          );
+        } catch (err) {
+          this.logger.warn(
+            `❌ Error al enviar mensaje a ${encargado.name}: ${err.message}`,
+          );
+        }
       }
     }
   }

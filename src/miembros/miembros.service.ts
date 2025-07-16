@@ -1,16 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateMiembroDto } from './dto/create-miembro.dto';
 import { UpdateMiembroDto } from './dto/update-miembro.dto';
-import { In, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Miembro } from './entities/miembro.entity';
 import * as bcrypt from 'bcrypt';
 import { Rol } from 'src/roles/enum/roles.enum';
 import { Horario } from './enum/horario.enum';
+import { Aseo } from 'src/aseos/entities/aseo.entity';
 @Injectable()
 export class MiembrosService {
   constructor(
     @InjectRepository(Miembro) private miembroRepository: Repository<Miembro>,
+    @InjectRepository(Aseo) private aseoRepository: Repository<Aseo>,
   ) {}
   async create(createMiembroDto: CreateMiembroDto) {
     const findMiembro = await this.miembroRepository.findOne({
@@ -30,40 +32,42 @@ export class MiembrosService {
       password: hashedPassword,
       telefono: createMiembroDto.telefono,
       rol: createMiembroDto.rol,
-      horario_aseo: createMiembroDto.horario_aseo
+      horario_aseo: createMiembroDto.horario_aseo,
     });
     const savedMiembro = await this.miembroRepository.save(nuevoMiembro);
-    return{
+    return {
       id: savedMiembro.id,
       name: savedMiembro.name,
       apellido: savedMiembro.apellido,
       telefono: savedMiembro.telefono,
-      rol: savedMiembro.rol
+      rol: savedMiembro.rol,
     };
   }
   async poblarMiembrosDePrueba(cantidad: number) {
-  const horarios = [Horario.DOMINGO, Horario.JUEVES, Horario.ANY];
-  
-  console.log(cantidad);
-  for (let i = 1; i <= cantidad; i++) {
-    await this.create({
-      name: `Miembro${i}`,
-      apellido: `Prueba`,
-      telefono: `30012345${i.toString().padStart(2, '0')}`,
-      user: `user${i.toString().padStart(2, '0')}`,
-      password: `password${i.toString().padStart(2, '0')}`,
-      rol: Rol.SERVIDOR,
-      horario_aseo: horarios[Math.floor(Math.random() * horarios.length)],
-    });
+    const horarios = [Horario.DOMINGO, Horario.JUEVES, Horario.ANY];
+
+    console.log(cantidad);
+    for (let i = 1; i <= cantidad; i++) {
+      await this.create({
+        name: `Miembro${i}`,
+        apellido: `Prueba`,
+        telefono: `30012345${i.toString().padStart(2, '0')}`,
+        user: `user${i.toString().padStart(2, '0')}`,
+        password: `password${i.toString().padStart(2, '0')}`,
+        rol: Rol.SERVIDOR,
+        horario_aseo: horarios[Math.floor(Math.random() * horarios.length)],
+      });
+    }
+
+    return { mensaje: `${cantidad} miembros creados con horario aleatorio.` };
   }
 
-  return { mensaje: `${cantidad} miembros creados con horario aleatorio.` };
-}
-
-async eliminarTodosLosMiembros() {
-  await this.miembroRepository.clear();
-  return { mensaje: '🗑️ Todos los miembros fueron eliminados correctamente.' };
-}
+  async eliminarTodosLosMiembros() {
+    await this.miembroRepository.clear();
+    return {
+      mensaje: '🗑️ Todos los miembros fueron eliminados correctamente.',
+    };
+  }
 
   async findAll() {
     const miembros = await this.miembroRepository.find();
@@ -88,7 +92,7 @@ async eliminarTodosLosMiembros() {
       throw new BadRequestException('Miembros no encontrados');
     }
     return miembros;
-  } 
+  }
 
   async getMiembros() {
     const miembros = await this.miembroRepository.find();
@@ -123,7 +127,28 @@ async eliminarTodosLosMiembros() {
       horario_aseo: miembro.horario_aseo,
     };
   }
+  async findAsignedAseosCurrentMonthById(miembroId: number) {
+    const hoy = new Date();
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
 
+    const aseos = await this.aseoRepository.find({
+      where: {
+        miembro: { id: miembroId },
+        fecha: Between(inicioMes, finMes),
+      },
+      relations: ['miembro'], // opcional, si quieres info del miembro
+    });
+
+    if (!aseos.length) {
+      return {
+        status: 404,
+        message: 'No se encontraron aseos asignados en el mes actual',
+      };
+    }
+
+    return aseos;
+  }
   async countMiembros() {
     const count = await this.miembroRepository.count();
     return count;
@@ -150,6 +175,30 @@ async eliminarTodosLosMiembros() {
       throw new BadRequestException(
         'Error al actualizar miembro',
         error.message,
+      );
+    }
+  }
+  async updateHorarioAseo(id: number, updateMiembroDto: UpdateMiembroDto) {
+    const miembro = await this.miembroRepository.findOne({ where: { id } });
+
+    if (!miembro) {
+      throw new BadRequestException('Miembro no encontrado');
+    }
+
+    try {
+      await this.miembroRepository.save({
+        ...miembro,
+        horario_aseo: updateMiembroDto.horario_aseo,
+      });
+
+      return {
+        message: 'Horario de aseo actualizado con éxito',
+        status: 200,
+        horario_aseo: updateMiembroDto.horario_aseo,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        `Error al actualizar miembro: ${error.message}`,
       );
     }
   }
